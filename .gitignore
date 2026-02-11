@@ -20,6 +20,8 @@ __pycache__/
 *.pkl
 *.pickle
 *.png
+# MAPS
+*.gpkg
 # Windows URL shortcuts ##
 urls/
 
