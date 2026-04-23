@@ -6,8 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
-# LARGE DATA FILES
+# Ignore PDFs everywhere
 *.pdf
+# ...except PDFs under /presentations
+!presentations/**/*.pdf
+
+# LARGE DATA FILES
 *.csv
 *.zip
 *.ppt
