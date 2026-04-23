@@ -8,7 +8,6 @@ __pycache__/
 
 # LARGE DATA FILES
 *.pdf
-!/presentations/
 !/presentations/**/*.pdf
 *.csv
 *.zip
