@@ -193,6 +193,6 @@ Current and future work includes:
 The long-term objective is to contribute toward more robust, interpretable, and data-driven approaches for understanding and forecasting modern electricity markets.
 
 Published by David González Romero.
-[https://orcid.org/0009-0006-1232-2615](https://orcid.org/0009-0006-1232-2615)
-[https://portalcientifico.upm.es/es/ipublic/researcher/337838](https://portalcientifico.upm.es/es/ipublic/researcher/337838)
-[https://www.linkedin.com/in/davidgonzalezromero](https://www.linkedin.com/in/davidgonzalezromero)
+- [https://orcid.org/0009-0006-1232-2615](https://orcid.org/0009-0006-1232-2615)
+- [https://portalcientifico.upm.es/es/ipublic/researcher/337838](https://portalcientifico.upm.es/es/ipublic/researcher/337838)
+- [https://www.linkedin.com/in/davidgonzalezromero](https://www.linkedin.com/in/davidgonzalezromero)
