@@ -70,6 +70,11 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
         # Update start date for next query (next day after last retrieved date)
         last_fecha = pd.to_datetime(data_batch['fecha'].iloc[-1])
         current_start = (last_fecha + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+
+        # If next start date is within the last 7 days, consider download complete
+        if pd.to_datetime(current_start) >= (pd.Timestamp.today().normalize() - pd.Timedelta(days=7)):
+            print("Reached recent dates (<7 days). Stopping.")
+            break
         
         # Sleep before next query
         time.sleep(sleep_seconds)
