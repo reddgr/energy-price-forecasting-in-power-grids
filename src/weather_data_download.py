@@ -4,6 +4,8 @@ Weather station data download utilities for AEMET API.
 
 import pandas as pd
 import time
+import json
+from typing import Union, Dict
 
 
 def download_station_data(client, station_id, start_date, max_retries=5, sleep_seconds=5):
@@ -82,3 +84,46 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
         print(f"\nFinal dataset: {len(all_data)} records")
     
     return all_data.reset_index(drop=True)
+
+
+def cast_columns(df: pd.DataFrame, schema: Union[Dict[str, str], str]) -> pd.DataFrame:
+    """
+    Cast dataframe columns based on a schema.
+
+    Parameters
+    - df: DataFrame to cast (modified in-place and returned).
+    - schema: dict mapping column -> dtype (e.g. "datetime", "string", "Int64", "float")
+              or a path to a JSON file containing such dict.
+
+    Returns
+    - The same DataFrame with casted columns.
+    """
+    if isinstance(schema, str):
+        with open(schema, "r", encoding="utf-8") as f:
+            schema = json.load(f)
+
+    date_cols = [col for col, dtype in schema.items() if dtype == "datetime"]
+    text_cols = [col for col, dtype in schema.items() if dtype == "string"]
+    int_cols = [col for col, dtype in schema.items() if dtype == "Int64"]
+    float_cols = [col for col, dtype in schema.items() if dtype == "float"]
+
+    for col in date_cols:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], format="%Y-%m-%d", errors="coerce")
+
+    for col in text_cols:
+        if col in df.columns:
+            df[col] = df[col].astype("string").str.strip()
+
+    for col in int_cols:
+        if col in df.columns:
+            df[col] = (
+                pd.to_numeric(df[col].astype("string").str.replace(",", ".", regex=False), errors="coerce")
+                .astype("Int64")
+            )
+
+    for col in float_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col].astype("string").str.replace(",", ".", regex=False), errors="coerce")
+
+    return df

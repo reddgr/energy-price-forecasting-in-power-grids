@@ -1,0 +1,22 @@
+{
+  "fecha": "datetime",
+  "indicativo": "string",
+  "nombre": "string",
+  "provincia": "string",
+  "altitud": "Int64",
+  "tmed": "float",
+  "prec": "float",
+  "tmin": "float",
+  "horatmin": "string",
+  "tmax": "float",
+  "horatmax": "string",
+  "dir": "Int64",
+  "velmedia": "float",
+  "racha": "float",
+  "horaracha": "string",
+  "hrMedia": "Int64",
+  "hrMax": "Int64",
+  "horaHrMax": "string",
+  "hrMin": "Int64",
+  "horaHrMin": "string"
+}
