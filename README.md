@@ -7,7 +7,7 @@ Work here includes:
 - electrical load forecasting and harmonized datasets,
 - integration of weather data and other exogenous variables, focusing first on Spain (AEMET OpenData),
 - descriptive analytics for energy systems,
-- and deep-learning approaches for market prediction and analysis.
+- and deep-learning-based approaches for market prediction and analysis.
 
 The repository serves as a public workspace for exploratory notebooks, data collection pipelines, preprocessing workflows, forecasting experiments, API integrations, and research-oriented implementations related to ongoing investigations and publications. The content changes frequently and represents selected snapshots rather than a comprehensive catalog.
 
