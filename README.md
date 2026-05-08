@@ -154,26 +154,6 @@ Some work is experimental or preliminary and reflects ongoing research activity.
 
 ---
 
-# Data Sources
-
-The work relies on publicly available data from electricity market operators, system operators, and weather-data providers, including:
-- NYISO,
-- PJM,
-- MISO,
-- ERCOT,
-- CAISO,
-- ENTSO-E,
-- Nord Pool,
-- AEMO,
-- JEPX,
-- IEX,
-- OMIE,
-- and other international electricity markets.
-
-Weather and climate-related data are collected from public APIs and meteorological services.
-
----
-
 # Methodologies
 
 The repository includes experiments and implementations involving:
