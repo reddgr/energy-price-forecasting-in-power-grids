@@ -1,22 +1,15 @@
 # Energy Price Forecasting in Power Grids
 
-This repository contains part of my ongoing research activity on electricity markets, time-series forecasting, energy analytics, and AI-driven methodologies for power systems.
+This repository shares part of my ongoing research activity on electricity markets, time-series forecasting, energy analytics, and AI-driven methodologies for power systems.
 
-The work focuses primarily on:
-- electricity price forecasting,
-- global energy-market datasets,
-- electrical load forecasting,
-- integration of weather data and other exogenous variables,
+Work here includes:
+- day-ahead electricity price forecasting across global markets,
+- electrical load forecasting and harmonized datasets,
+- integration of weather data and other exogenous variables, focusing first on Spain (AEMET OpenData),
 - descriptive analytics for energy systems,
 - and deep-learning approaches for market prediction and analysis.
 
-The repository serves as a public workspace where I share:
-- exploratory notebooks,
-- data collection pipelines,
-- preprocessing workflows,
-- forecasting experiments,
-- API integrations,
-- and research-oriented implementations related to ongoing investigations and publications.
+The repository serves as a public workspace for exploratory notebooks, data collection pipelines, preprocessing workflows, forecasting experiments, API integrations, and research-oriented implementations related to ongoing investigations and publications. The content changes frequently and represents selected snapshots rather than a comprehensive catalog.
 
 ---
 
@@ -33,7 +26,7 @@ for electricity markets characterized by:
 - nonlinear temporal dynamics,
 - and strong interactions between price, demand, and weather conditions.
 
-Current work includes:
+Work in this line includes:
 - day-ahead electricity price forecasting,
 - load forecasting,
 - descriptive market analysis,
