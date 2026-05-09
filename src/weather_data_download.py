@@ -53,7 +53,7 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
                 retries += 1
                 print(f"✗ Error: {str(e)} (Retry {retries}/{max_retries})")
                 if retries < max_retries:
-                    sleep_seconds = max(1, sleep_seconds + random.uniform(-3, 3))
+                    sleep_seconds = max(1, sleep_seconds + random.uniform(-5, 4))
                     time.sleep(sleep_seconds)
         
         # If all retries failed, exit
