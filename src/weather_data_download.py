@@ -26,10 +26,10 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
     """
     all_data = pd.DataFrame()
     current_start = start_date
-    n_dias = 180
+    n_dias = 179
     
     while True:
-        # Calculate end date (180 days from current start)
+        # Calculate end date (179 days from current start)
         end_date = (pd.to_datetime(current_start) + pd.Timedelta(days=n_dias)).strftime("%Y-%m-%d")
         
         # Try to fetch with retries
