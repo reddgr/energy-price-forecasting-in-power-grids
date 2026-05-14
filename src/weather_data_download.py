@@ -9,7 +9,7 @@ import random
 from typing import Union, Dict
 
 
-def download_station_data(client, station_id, start_date, max_retries=5, sleep_seconds=5):
+def download_station_data(client, station_id, start_date, max_retries=5, sleep_seconds=5, exclude_recent_days=7):
     """
     Downloads weather station data from a given start date until current date.
     Queries data in 180-day batches and concatenates results.
@@ -20,7 +20,7 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
         start_date: Start date as string (format: "YYYY-MM-DD")
         max_retries: Number of retries for failed queries (default: 5)
         sleep_seconds: Seconds to sleep between queries (default: 5)
-    
+        exclude_recent_days: Number of recent days to exclude from download (default: 7)
     Returns:
         DataFrame with all retrieved data, deduplicated by 'fecha'
     """
@@ -73,9 +73,9 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
         last_fecha = pd.to_datetime(data_batch['fecha'].iloc[-1])
         current_start = (last_fecha + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
 
-        # If next start date is within the last 7 days, consider download complete
-        if pd.to_datetime(current_start) >= (pd.Timestamp.today().normalize() - pd.Timedelta(days=7)):
-            print("Reached recent dates (<7 days). Stopping.")
+        # If next start date is within the last exclude_recent_days days, consider download complete
+        if pd.to_datetime(current_start) >= (pd.Timestamp.today().normalize() - pd.Timedelta(days=exclude_recent_days)):
+            print(f"Reached recent dates (<{exclude_recent_days} days). Stopping.")
             break
         
         # Sleep before next query
