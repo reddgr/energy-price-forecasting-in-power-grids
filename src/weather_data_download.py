@@ -54,7 +54,10 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
                 retries += 1
                 print(f"✗ Error: {str(e)} (Retry {retries}/{max_retries})")
                 if retries < max_retries:
-                    sleep_seconds = max(1, sleep_seconds + random.uniform(-5, 4))
+                    if "No datos URL" in str(e):
+                        sleep_seconds = 0.1
+                    else:
+                        sleep_seconds = max(1, sleep_seconds + random.uniform(-5, 4))
                     time.sleep(sleep_seconds)
         
         # If all retries failed, either continue from the next batch or exit
