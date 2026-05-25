@@ -9,7 +9,7 @@ import random
 from typing import Union, Dict
 
 
-def download_station_data(client, station_id, start_date, max_retries=5, sleep_seconds=5, exclude_recent_days=7):
+def download_station_data(client, station_id, start_date, max_retries=5, sleep_seconds=5, exclude_recent_days=7, persistent_retries=False):
     """
     Downloads weather station data from a given start date until current date.
     Queries data in 180-day batches and concatenates results.
@@ -21,6 +21,7 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
         max_retries: Number of retries for failed queries (default: 5)
         sleep_seconds: Seconds to sleep between queries (default: 5)
         exclude_recent_days: Number of recent days to exclude from download (default: 7)
+        persistent_retries: Continue from the next batch after repeated failures.
     Returns:
         DataFrame with all retrieved data, deduplicated by 'fecha'
     """
@@ -56,9 +57,19 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
                     sleep_seconds = max(1, sleep_seconds + random.uniform(-5, 4))
                     time.sleep(sleep_seconds)
         
-        # If all retries failed, exit
+        # If all retries failed, either continue from the next batch or exit
         if data_batch is None:
-            print(f"Failed to retrieve data after {max_retries} retries. Stopping.")
+            print(f"Failed to retrieve data after {max_retries} retries.")
+            next_start_dt = pd.to_datetime(end_date) + pd.Timedelta(days=1)
+            recent_cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=exclude_recent_days)
+            if next_start_dt >= recent_cutoff:
+                print(f"Reached recent dates (<{exclude_recent_days} days). Stopping.")
+                break
+            if persistent_retries:
+                current_start = next_start_dt.strftime("%Y-%m-%d")
+                print(f"Continuing from {current_start}")
+                continue
+            print("Stopping.")
             break
         
         # If no data retrieved, we've reached the end
