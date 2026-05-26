@@ -13,6 +13,9 @@ __pycache__/
 
 # LARGE DATA FILES
 *.csv
+# ... except stats file
+!csv/stats/weather-station-stats.csv
+
 *.zip
 *.ppt
 *.pptx
