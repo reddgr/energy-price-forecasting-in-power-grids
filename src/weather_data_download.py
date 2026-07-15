@@ -9,47 +9,60 @@ import random
 from typing import Union, Dict
 
 
-def download_station_data(client, station_id, start_date, max_retries=5, sleep_seconds=5, exclude_recent_days=7, persistent_retries=False):
+def download_station_data(
+    client,
+    station_id,
+    start_date,
+    end_date=None,
+    max_retries=5,
+    sleep_seconds=5,
+    exclude_recent_days=7,
+    persistent_retries=False,
+):
     """
-    Downloads weather station data from a given start date until current date.
-    Queries data in 180-day batches and concatenates results.
-    
+    Downloads weather station data from a given start date until current date
+    (or until end_date, if provided). Queries data in 180-day batches.
+
     Args:
         client: AemetClient instance for API calls
         station_id: AEMET station ID (e.g., "0367")
         start_date: Start date as string (format: "YYYY-MM-DD")
+        end_date: Optional end date as string (format: "YYYY-MM-DD"). If provided,
+            rows beyond this date are trimmed and download stops.
         max_retries: Number of retries for failed queries (default: 5)
         sleep_seconds: Seconds to sleep between queries (default: 5)
         exclude_recent_days: Number of recent days to exclude from download (default: 7)
         persistent_retries: Continue from the next batch after repeated failures.
+
     Returns:
         DataFrame with all retrieved data, deduplicated by 'fecha'
     """
     all_data = pd.DataFrame()
     current_start = start_date
     n_dias = 179
-    
+    end_date_ts = pd.to_datetime(end_date).normalize() if end_date is not None else None
+
     while True:
         # Calculate end date (179 days from current start)
-        end_date = (pd.to_datetime(current_start) + pd.Timedelta(days=n_dias)).strftime("%Y-%m-%d")
-        
+        query_end_date = (pd.to_datetime(current_start) + pd.Timedelta(days=n_dias)).strftime("%Y-%m-%d")
+
         # Try to fetch with retries
         retries = 0
         data_batch = None
-        
+
         while retries < max_retries:
             try:
-                print(f"Fetching data for station {station_id} from {current_start} to {end_date}...")
-                data_batch = pd.DataFrame(client.fetch_station_history(station_id, current_start, end_date))
-                
+                print(f"Fetching data for station {station_id} from {current_start} to {query_end_date}...")
+                data_batch = pd.DataFrame(client.fetch_station_history(station_id, current_start, query_end_date))
+
                 if len(data_batch) > 0:
-                    first_date = data_batch['fecha'].iloc[0]
-                    last_date = data_batch['fecha'].iloc[-1]
+                    first_date = data_batch["fecha"].iloc[0]
+                    last_date = data_batch["fecha"].iloc[-1]
                     print(f"✓ Retrieved {len(data_batch)} records (from {first_date} to {last_date})")
                 else:
-                    print(f"✓ Retrieved 0 records")
+                    print("✓ Retrieved 0 records")
                 break
-                
+
             except Exception as e:
                 retries += 1
                 print(f"✗ Error: {str(e)} (Retry {retries}/{max_retries})")
@@ -59,51 +72,84 @@ def download_station_data(client, station_id, start_date, max_retries=5, sleep_s
                     else:
                         sleep_seconds = max(1, sleep_seconds + random.uniform(-5, 4))
                     time.sleep(sleep_seconds)
-        
+
         # If all retries failed, either continue from the next batch or exit
         if data_batch is None:
             print(f"Failed to retrieve data after {max_retries} retries.")
-            next_start_dt = pd.to_datetime(end_date) + pd.Timedelta(days=1)
+            next_start_dt = pd.to_datetime(query_end_date) + pd.Timedelta(days=1)
+
+            # Preserve existing logic when end_date is not provided
             recent_cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=exclude_recent_days)
-            if next_start_dt >= recent_cutoff:
+            if end_date_ts is None and next_start_dt >= recent_cutoff:
                 print(f"Reached recent dates (<{exclude_recent_days} days). Stopping.")
                 break
+
+            # Stop when next batch would start after end_date
+            if end_date_ts is not None and next_start_dt > end_date_ts:
+                print(f"Reached end_date ({end_date_ts.date()}). Stopping.")
+                break
+
             if persistent_retries:
                 current_start = next_start_dt.strftime("%Y-%m-%d")
                 print(f"Continuing from {current_start}")
                 continue
             print("Stopping.")
             break
-        
+
         # If no data retrieved, we've reached the end
         if len(data_batch) == 0:
             print("No more data available. Stopping.")
             break
-        
+
+        # Prepare datetime for clipping/flow control
+        batch_fecha = pd.to_datetime(data_batch["fecha"], errors="coerce")
+        max_batch_fecha = batch_fecha.max()
+
+        # If end_date is provided and batch exceeds it, trim and stop
+        if end_date_ts is not None and pd.notna(max_batch_fecha) and max_batch_fecha > end_date_ts:
+            data_batch = data_batch.loc[batch_fecha <= end_date_ts].copy()
+            print(f"Reached end_date ({end_date_ts.date()}). Trimmed rows beyond end_date and stopping.")
+            if len(data_batch) > 0:
+                all_data = pd.concat([all_data, data_batch], ignore_index=True)
+            break
+
         # Append batch to all_data
         all_data = pd.concat([all_data, data_batch], ignore_index=True)
-        
+
+        # If end_date is provided and we've reached it exactly, stop
+        if end_date_ts is not None and pd.notna(max_batch_fecha) and max_batch_fecha >= end_date_ts:
+            print(f"Reached end_date ({end_date_ts.date()}). Stopping.")
+            break
+
         # Update start date for next query (next day after last retrieved date)
-        last_fecha = pd.to_datetime(data_batch['fecha'].iloc[-1])
+        last_fecha = pd.to_datetime(data_batch["fecha"].iloc[-1])
         current_start = (last_fecha + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
 
-        # If next start date is within the last exclude_recent_days days, consider download complete
-        if pd.to_datetime(current_start) >= (pd.Timestamp.today().normalize() - pd.Timedelta(days=exclude_recent_days)):
-            print(f"Reached recent dates (<{exclude_recent_days} days). Stopping.")
+        # Preserve original "recent days cutoff" only when end_date is not provided
+        if end_date_ts is None:
+            if pd.to_datetime(current_start) >= (
+                pd.Timestamp.today().normalize() - pd.Timedelta(days=exclude_recent_days)
+            ):
+                print(f"Reached recent dates (<{exclude_recent_days} days). Stopping.")
+                break
+
+        # With end_date, avoid unnecessary next fetch
+        if end_date_ts is not None and pd.to_datetime(current_start) > end_date_ts:
+            print(f"Reached end_date ({end_date_ts.date()}). Stopping.")
             break
-        
+
         # Sleep before next query
         time.sleep(sleep_seconds)
-    
+
     # Remove duplicates based on 'fecha'
     if len(all_data) > 0:
         initial_count = len(all_data)
-        all_data = all_data.drop_duplicates(subset=['fecha'], keep='first')
+        all_data = all_data.drop_duplicates(subset=["fecha"], keep="first")
         duplicates_removed = initial_count - len(all_data)
         if duplicates_removed > 0:
             print(f"\nRemoved {duplicates_removed} duplicate records")
         print(f"\nFinal dataset: {len(all_data)} records")
-    
+
     return all_data.reset_index(drop=True)
 
 
