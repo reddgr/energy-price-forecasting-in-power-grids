@@ -13,6 +13,7 @@ __pycache__/
 
 # LARGE DATA FILES
 *.csv
+*.csv#
 # ... except stats file
 !csv/stats/weather-station-stats.csv
 
@@ -52,6 +53,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Other
+.github
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
