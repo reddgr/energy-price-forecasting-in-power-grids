@@ -1,9 +1,12 @@
 contextily
 geopandas
 jinja2
-matplotlib>=3.8
-numpy<2
-pandas<3
+matplotlib
+numpy
+pandas
+# matplotlib>=3.8
+# numpy<2
+# pandas<3
 Pillow
 python-dotenv
 requests
