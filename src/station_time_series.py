@@ -10,6 +10,8 @@ def create_station_time_series(
     provinces_to_exclude=None,
     provinces_to_include=None,
     max_interpolation_days=10,
+    start_date=None,
+    end_date=None,
 ):
     """Create and export a date-by-station time series for one station metric."""
     if provinces_to_exclude is not None and provinces_to_include is not None:
@@ -18,6 +20,17 @@ def create_station_time_series(
         )
     if max_interpolation_days is not None and max_interpolation_days < 0:
         raise ValueError("max_interpolation_days must be non-negative or None.")
+
+    start_date = (
+        pd.to_datetime(start_date, errors="raise")
+        if start_date is not None
+        else None
+    )
+    end_date = (
+        pd.to_datetime(end_date, errors="raise") if end_date is not None else None
+    )
+    if start_date is not None and end_date is not None and start_date > end_date:
+        raise ValueError("start_date must be on or before end_date.")
 
     source_path = Path(source_path)
     files = sorted(source_path.glob("*_hist.csv"))
@@ -64,6 +77,24 @@ def create_station_time_series(
                 continue
 
             values = pd.to_numeric(station_df[metric], errors="coerce")
+            if start_date is not None:
+                in_range = dates >= start_date
+                if end_date is not None:
+                    in_range &= dates <= end_date
+                dates = dates[in_range]
+                values = values[in_range]
+            elif end_date is not None:
+                in_range = dates <= end_date
+                dates = dates[in_range]
+                values = values[in_range]
+
+            if dates.empty:
+                print(
+                    f"{file_path.name}: {records_processed} records processed "
+                    "(excluded)"
+                )
+                continue
+
             station_series.append(
                 pd.Series(values.to_numpy(), index=dates, name=station_id)
             )
