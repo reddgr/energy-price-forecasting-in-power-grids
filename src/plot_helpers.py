@@ -68,7 +68,8 @@ def plot_station_time_series(
 			time_series.index,
 			trend_values,
 			color="tab:red",
-			linewidth=2,
+			linewidth=1,
+			linestyle=':',
 			label=f"{metric_name} poly. trend (d. {trend_line})",
 		)
 
