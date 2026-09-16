@@ -76,6 +76,7 @@ def plot_station_time_series(
 	ax.set_title(f"Average Daily {metric_name} Across Stations")
 	ax.set_xlabel("Date")
 	ax.set_ylabel(f"Average {metric_name}")
+	ax.grid(True, which="major", axis="both", linestyle="--", alpha=0.9)
 	ax.xaxis.set_major_locator(mdates.YearLocator())
 	ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 	ax.tick_params(axis="x", labelrotation=45)

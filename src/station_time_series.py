@@ -138,7 +138,7 @@ def create_station_time_series(
     return result
 
 
-def create_station_yearly_averages(
+def create_station_daily_averages(
     source_path,
     export_path,
     metric,
@@ -211,7 +211,7 @@ def create_station_yearly_averages(
     if not station_averages:
         raise ValueError("No station files remain after applying the province filter.")
 
-    canonical_dates = pd.date_range("2001-01-01", "2001-12-31", freq="D", name="fecha")
+    canonical_dates = pd.date_range("1900-01-01", "1900-12-31", freq="D", name="fecha")
     canonical_keys = pd.MultiIndex.from_arrays(
         [canonical_dates.month, canonical_dates.day], names=["month", "day"]
     )
