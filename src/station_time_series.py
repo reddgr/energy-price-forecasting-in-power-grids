@@ -1,4 +1,5 @@
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 
@@ -249,4 +250,74 @@ def create_station_daily_averages(
         columns=["source_file", "station_id", "indicativo_values"],
     ).to_csv(discrepancy_log_path, index=False)
 
+    return result
+
+
+def create_station_anomaly_series(
+    source_path,
+    averages_source_path,
+    export_path,
+    metric,
+    provinces_to_exclude=None,
+    provinces_to_include=None,
+    rolling_window_days=None,
+    fill_rolling_extremes=False,
+):
+    """Create and export a date-by-station anomaly series for one metric."""
+    if rolling_window_days is not None and (
+        not isinstance(rolling_window_days, int) or rolling_window_days < 1
+    ):
+        raise ValueError("rolling_window_days must be None or a positive integer.")
+    if not isinstance(fill_rolling_extremes, bool):
+        raise ValueError("fill_rolling_extremes must be a boolean.")
+
+    averages_source_path = Path(averages_source_path)
+    if not averages_source_path.is_file():
+        raise FileNotFoundError(f"Averages file not found: {averages_source_path}")
+
+    with TemporaryDirectory() as temporary_directory:
+        series = create_station_time_series(
+            source_path=source_path,
+            export_path=Path(temporary_directory) / "series.csv",
+            metric=metric,
+            provinces_to_exclude=provinces_to_exclude,
+            provinces_to_include=provinces_to_include,
+        )
+    averages = pd.read_csv(
+        averages_source_path,
+        index_col="fecha",
+        parse_dates=["fecha"],
+    )
+    if averages.index.duplicated().any():
+        raise ValueError("Averages file contains duplicated dates.")
+
+    average_keys = pd.MultiIndex.from_arrays(
+        [averages.index.month, averages.index.day], names=["month", "day"]
+    )
+    averages_by_day = averages.copy()
+    averages_by_day.index = average_keys
+    missing_stations = set(series.columns) - set(averages_by_day.columns)
+    if missing_stations:
+        raise ValueError(
+            "Averages file is missing station columns: "
+            f"{sorted(missing_stations)}"
+        )
+
+    series_keys = pd.MultiIndex.from_arrays(
+        [series.index.month, series.index.day], names=["month", "day"]
+    )
+    aligned_averages = averages_by_day.reindex(series_keys)[series.columns]
+    aligned_averages.index = series.index
+    result = series - aligned_averages
+
+    if rolling_window_days is not None and rolling_window_days > 1:
+        result = result.rolling(
+            rolling_window_days,
+            center=True,
+            min_periods=1 if fill_rolling_extremes else None,
+        ).mean()
+
+    export_path = Path(export_path)
+    export_path.parent.mkdir(parents=True, exist_ok=True)
+    result.to_csv(export_path, index=True)
     return result

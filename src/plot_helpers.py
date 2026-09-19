@@ -73,7 +73,7 @@ def plot_station_time_series(
 			label=f"{metric_name} poly. trend (d. {trend_line})",
 		)
 
-	ax.set_title(f"Average Daily {metric_name} Across Stations")
+	ax.set_title(f"Avg. {metric_name} across stations")
 	ax.set_xlabel("Date")
 	ax.set_ylabel(f"Average {metric_name}")
 	ax.grid(True, which="major", axis="both", linestyle="--", alpha=0.9)
