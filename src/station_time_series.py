@@ -144,12 +144,17 @@ def create_station_daily_averages(
     metric,
     provinces_to_exclude=None,
     provinces_to_include=None,
+    rolling_window_days=None,
 ):
     """Create and export a 365-day station climatology for one metric."""
     if provinces_to_exclude is not None and provinces_to_include is not None:
         raise ValueError(
             "Use either provinces_to_exclude or provinces_to_include, not both."
         )
+    if rolling_window_days is not None and (
+        not isinstance(rolling_window_days, int) or rolling_window_days < 1
+    ):
+        raise ValueError("rolling_window_days must be None or a positive integer.")
 
     source_path = Path(source_path)
     files = sorted(source_path.glob("*_hist.csv"))
@@ -220,6 +225,16 @@ def create_station_daily_averages(
     )
     result.index = canonical_dates
     result = result.sort_index(axis=1)
+
+    if rolling_window_days is not None and rolling_window_days > 1:
+        padding_days = rolling_window_days // 2
+        wrapped_result = pd.concat(
+            [result.tail(padding_days), result, result.head(padding_days)]
+        )
+        result = wrapped_result.rolling(
+            rolling_window_days, center=True
+        ).mean().iloc[padding_days : padding_days + len(result)]
+        result.index = canonical_dates
 
     export_path = Path(export_path)
     export_path.parent.mkdir(parents=True, exist_ok=True)
